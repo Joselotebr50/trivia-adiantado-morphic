@@ -76,7 +76,7 @@ function renderHome() {
     `;
 }
 
-// ===== CRIAÇÃO DA TELA DO JOGO (Executada apenas UMA vez) =====
+// ===== CRIAÇÃO DA TELA DO JOGO =====
 function renderGame() {
     const app = document.getElementById('app');
     app.innerHTML = `
@@ -123,20 +123,22 @@ function startGame() {
     gameState.isActive = true;
     gameState.powerUps = { fifty: isPremium ? 5 : 3, skip: isPremium ? 3 : 2, extraTime: isPremium ? 3 : 1 };
     
-    renderGame();      // Cria a UI do jogo 1 vez
-    loadQuestion();    // Preenche a pergunta atual
-    startTimer();      // Inicia o cronômetro
+    renderGame();
+    loadQuestion(); // Carrega a primeira pergunta e já atualiza os power-ups
+    startTimer();
 }
 
 // ===== CARREGAR PERGUNTA =====
 function loadQuestion() {
     if (gameState.currentIndex >= gameState.questions.length) { endGame(true); return; }
+    
     const q = gameState.questions[gameState.currentIndex];
     document.getElementById('category').textContent = q.category;
     document.getElementById('question').textContent = q.question;
     
     const optionsDiv = document.getElementById('options');
-    optionsDiv.innerHTML = '';
+    optionsDiv.innerHTML = ''; // Limpa as opções anteriores
+    
     q.options.forEach((option, index) => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
@@ -148,20 +150,29 @@ function loadQuestion() {
     
     document.getElementById('feedback').innerHTML = '';
     document.getElementById('nextButton').innerHTML = '';
+    
     updateStats();
+    updatePowerUpButtons(); // Atualiza os botões de power-up com segurança
 }
 
 // ===== SELECIONAR RESPOSTA =====
 function selectAnswer(index) {
-    if (!gameState.isActive) return;
-    gameState.isActive = false;
-    clearInterval(window.timerInterval);
+    if (!gameState.isActive) return; // Se o jogo já acabou ou cronômetro estourou, ignora
+    
+    gameState.isActive = false; // Para de aceitar novos cliques
+    clearInterval(window.timerInterval); // Para o cronômetro
+    
     const q = gameState.questions[gameState.currentIndex];
     const isCorrect = index === q.correct;
+    
+    // Destaca visualmente a resposta correta e a errada
     document.getElementById(`option-${q.correct}`).classList.add('correct');
     if (!isCorrect) { document.getElementById(`option-${index}`).classList.add('wrong'); }
+    
+    // Desabilita todos os botões de opção
     document.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
     
+    // Pontuação e vidas
     if (isCorrect) {
         gameState.score += getPoints(q.difficulty);
         gameState.correctCount++;
@@ -170,28 +181,35 @@ function selectAnswer(index) {
     } else {
         gameState.lives--;
     }
+    
+    // Feedback visual
     const feedback = document.getElementById('feedback');
     if (isCorrect) {
         feedback.innerHTML = `<div class="feedback correct"><strong>✅ Correto!</strong><br>${q.explanation}</div>`;
     } else {
         feedback.innerHTML = `<div class="feedback wrong"><strong>❌ Errado!</strong><br>${q.explanation}</div>`;
     }
+    
     updateStats();
+    
+    // Verifica se o jogador perdeu todas as vidas
     if (gameState.lives <= 0) {
         setTimeout(() => endGame(false), 2000);
     } else {
+        // Mostra o botão de próxima pergunta
         document.getElementById('nextButton').innerHTML = `<button class="next-btn" onclick="nextQuestion()">Próxima Pergunta →</button>`;
     }
 }
 
-// ===== PRÓXIMA PERGUNTA (CORRIGIDO, NÃO RECRIA O DOM) =====
+// ===== PRÓXIMA PERGUNTA (CORRIGIDO SEM TRAVAR) =====
 function nextQuestion() {
     gameState.currentIndex++;
-    gameState.isActive = true;
+    gameState.isActive = true; // Reativa os cliques
     gameState.timer = 30;
-    clearInterval(window.timerInterval); // Garante que o timer antigo morra antes de recomeçar
-    loadQuestion(); // Atualiza APENAS os textos e botões, sem deletar a tela
-    startTimer();   // Reinicia o cronômetro
+    
+    // Reaproveita a tela sem destruir o HTML
+    loadQuestion(); 
+    startTimer();
 }
 
 // ===== TIMER =====
@@ -199,6 +217,7 @@ function startTimer() {
     clearInterval(window.timerInterval);
     gameState.timer = 30;
     document.getElementById('timer').textContent = gameState.timer;
+    
     window.timerInterval = setInterval(() => {
         gameState.timer--;
         const timerEl = document.getElementById('timer');
@@ -212,13 +231,17 @@ function startTimer() {
 
 function timeUp() {
     if (!gameState.isActive) return;
+    
     gameState.isActive = false;
     gameState.lives--;
+    
     const q = gameState.questions[gameState.currentIndex];
     document.getElementById(`option-${q.correct}`).classList.add('correct');
     document.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
     document.getElementById('feedback').innerHTML = `<div class="feedback wrong"><strong>⏰ Tempo esgotado!</strong></div>`;
+    
     updateStats();
+    
     if (gameState.lives <= 0) {
         setTimeout(() => endGame(false), 2000);
     } else {
@@ -226,15 +249,19 @@ function timeUp() {
     }
 }
 
-// ===== POWER UPS =====
+// ===== POWER UPS COM VERIFICAÇÃO DE SEGURANÇA =====
 function usePowerUp(type) {
     if (!gameState.isActive) return;
+    
     if (type === 'fifty' && gameState.powerUps.fifty > 0) {
         gameState.powerUps.fifty--;
         const q = gameState.questions[gameState.currentIndex];
         const wrongIndexes = q.options.map((_, i) => i).filter(i => i !== q.correct);
         const toRemove = wrongIndexes.sort(() => Math.random() - 0.5).slice(0, 2);
-        toRemove.forEach(i => { const btn = document.getElementById(`option-${i}`); if (btn) btn.style.display = 'none'; });
+        toRemove.forEach(i => { 
+            const btn = document.getElementById(`option-${i}`); 
+            if (btn) btn.style.display = 'none'; 
+        });
         updatePowerUpButtons();
     }
     if (type === 'skip' && gameState.powerUps.skip > 0) {
@@ -245,19 +272,29 @@ function usePowerUp(type) {
     if (type === 'extraTime' && gameState.powerUps.extraTime > 0) {
         gameState.powerUps.extraTime--;
         gameState.timer += 10;
-        document.getElementById('timer').textContent = gameState.timer;
+        const timerEl = document.getElementById('timer');
+        if (timerEl) timerEl.textContent = gameState.timer;
         updatePowerUpButtons();
     }
 }
 
 function updatePowerUpButtons() {
-    if(document.getElementById('fiftyCount')) {
+    // AQUI ESTÁ A CORREÇÃO: Verificamos se o elemento existe antes de mexer
+    const fiftyBtn = document.getElementById('fiftyBtn');
+    const skipBtn = document.getElementById('skipBtn');
+    const extraBtn = document.getElementById('extraTimeBtn');
+    
+    if (fiftyBtn) {
         document.getElementById('fiftyCount').textContent = gameState.powerUps.fifty;
+        fiftyBtn.disabled = gameState.powerUps.fifty <= 0;
+    }
+    if (skipBtn) {
         document.getElementById('skipCount').textContent = gameState.powerUps.skip;
+        skipBtn.disabled = gameState.powerUps.skip <= 0;
+    }
+    if (extraBtn) {
         document.getElementById('extraTimeCount').textContent = gameState.powerUps.extraTime;
-        document.getElementById('fiftyBtn').disabled = gameState.powerUps.fifty <= 0;
-        document.getElementById('skipBtn').disabled = gameState.powerUps.skip <= 0;
-        document.getElementById('extraTimeBtn').disabled = gameState.powerUps.extraTime <= 0;
+        extraBtn.disabled = gameState.powerUps.extraTime <= 0;
     }
 }
 
@@ -269,8 +306,10 @@ function getPoints(difficulty) {
 }
 
 function updateStats() {
-    document.getElementById('lives').textContent = '❤️'.repeat(gameState.lives) + '🖤'.repeat(3 - gameState.lives);
-    document.getElementById('score').textContent = gameState.score;
+    const livesEl = document.getElementById('lives');
+    const scoreEl = document.getElementById('score');
+    if (livesEl) livesEl.textContent = '❤️'.repeat(gameState.lives) + '🖤'.repeat(3 - gameState.lives);
+    if (scoreEl) scoreEl.textContent = gameState.score;
 }
 
 function saveProgress() {
