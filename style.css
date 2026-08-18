@@ -1,0 +1,313 @@
+/* ==========================================
+   GLASSMORPHIC JOGO DE TRIVIA - ESTILOS
+   ========================================== */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    /* Caminho para a sua imagem de fundo da pasta images */
+    background-image: url('./images/01.png'); 
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 20px 20px 100px 20px;
+    color: #ffffff;
+    overflow-x: hidden;
+    font-family: 'Poppins', sans-serif;
+    /* Remove o gradiente antigo para a imagem aparecer */
+}
+
+/* ===== GLASS EFFECT VARIABLES ===== */
+:root {
+    --glass-bg: rgba(255, 255, 255, 0.06);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.12);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    --glass-blur: blur(16px);
+}
+
+/* ===== GLASS UTILITY CLASS ===== */
+.glass {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+    border-radius: 24px;
+    box-shadow: var(--glass-shadow);
+}
+
+/* ===== LAYOUT ===== */
+#app {
+    max-width: 480px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ===== HEADER ===== */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+}
+
+.header-left, .header-right {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    cursor: pointer;
+}
+
+.header-center {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #fff;
+    text-shadow: 0 4px 15px rgba(245, 166, 35, 0.5);
+}
+
+.header-center span {
+    color: #f5a623; /* Dourado do logotipo */
+}
+
+/* ===== HERO BANNER ===== */
+.hero-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px;
+    min-height: 180px;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-text h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.hero-text h2 span {
+    color: #f5a623;
+}
+
+.hero-text h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    line-height: 1.2;
+}
+
+.hero-text p {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.7);
+}
+
+.hero-image {
+    width: 100px;
+    height: 100px;
+    background: url('YOUR_TROPHY_IMAGE_URL') center/cover no-repeat; /* COLOQUE SUA IMAGEM AQUI */
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+}
+
+.hero-dots {
+    display: flex;
+    gap: 6px;
+    margin-top: 15px;
+}
+.hero-dots span {
+    width: 8px;
+    height: 8px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+}
+.hero-dots span.active { background: #f5a623; width: 20px; border-radius: 10px; }
+
+/* ===== SEARCH BAR ===== */
+.search-bar {
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(255,255,255,0.5);
+}
+
+.search-bar input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    width: 100%;
+    font-size: 0.95rem;
+}
+.search-bar input::placeholder { color: rgba(255,255,255,0.4); }
+
+/* ===== MENU GRID ===== */
+.menu-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
+}
+
+.menu-card {
+    padding: 20px 12px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+.menu-card:hover { transform: translateY(-5px); }
+
+.menu-card .icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+/* Cores Neon dos Ícones */
+.icon-yellow { background: linear-gradient(135deg, #f5a623, #f7c948); color: #fff; }
+.icon-pink { background: linear-gradient(135deg, #e91e63, #f06292); color: #fff; }
+.icon-purple { background: linear-gradient(135deg, #9c27b0, #ba68c8); color: #fff; }
+.icon-blue { background: linear-gradient(135deg, #1976d2, #42a5f5); color: #fff; }
+.icon-teal { background: linear-gradient(135deg, #00897b, #4db6ac); color: #fff; }
+.icon-orange { background: linear-gradient(135deg, #f57c00, #ffa726); color: #fff; }
+
+.menu-card h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; }
+.menu-card p { font-size: 0.65rem; color: rgba(255,255,255,0.5); line-height: 1.2; }
+
+.menu-card .arrow-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: #fff;
+    margin-top: auto;
+}
+
+/* ===== RECENT QUIZZES (Horizontal Scroll) ===== */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 4px;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+.section-header span { color: rgba(255,255,255,0.5); font-size: 0.8rem; }
+
+.recents-scroll {
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    scrollbar-width: none; /* Firefox */
+}
+.recents-scroll::-webkit-scrollbar { display: none; }
+
+.recent-card {
+    min-width: 140px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.recent-img {
+    width: 100%;
+    height: 100px;
+    border-radius: 16px;
+    background: #2a2a3a;
+    background-size: cover;
+    background-position: center;
+}
+
+.recent-card h4 { font-size: 0.8rem; font-weight: 600; }
+.recent-card .info { display: flex; justify-content: space-between; font-size: 0.65rem; color: rgba(255,255,255,0.5); }
+
+/* ===== BOTTOM NAVIGATION ===== */
+.bottom-nav {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 450px;
+    padding: 12px 20px;
+    border-radius: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.6rem;
+    color: rgba(255,255,255,0.4);
+    gap: 4px;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+.nav-item.active { color: #f5a623; }
+.nav-item i { font-size: 1.4rem; }
+
+.nav-center-wrapper {
+    position: relative;
+    top: -15px;
+}
+
+.nav-center-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f5a623, #f7c948);
+    border: 4px solid rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: #131112;
+    box-shadow: 0 10px 25px rgba(245, 166, 35, 0.4);
+    cursor: pointer;
+}
+
+/* ===== QUIZ SCREEN (Oculto por padrão) ===== */
+#quiz-screen {
+    display: none; /* Será controlado pelo JS */
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 400px) {
+    .menu-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .hero-text h3 { font-size: 1.2rem; }
+}
