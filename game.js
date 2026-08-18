@@ -26,11 +26,6 @@ let userProgress = {
 const PREMIUM_PRICE = 9.90;
 let isPremium = localStorage.getItem('trivia_premium') === 'true';
 
-// ===== NOVO INIT (ABRE O MENU INICIAL) =====
-function initGame() {
-    renderHome(); 
-}
-
 // ===== MENU INICIAL GLASSMORPHIC =====
 function renderHome() {
     const app = document.getElementById('app');
@@ -81,13 +76,13 @@ function renderHome() {
     `;
 }
 
-// ===== TELA DO JOGO (PRESERVAÇÃO DE IDs PRA NÃO QUEBRAR A LÓGICA) =====
+// ===== CRIAÇÃO DA TELA DO JOGO (Executada apenas UMA vez) =====
 function renderGame() {
     const app = document.getElementById('app');
     app.innerHTML = `
         <div id="quiz-screen" class="glass">
             <div class="header" style="padding: 0;">
-                <div class="header-left glass" onclick="initGame()" style="width: 40px; height: 40px; font-size: 1rem; cursor: pointer;">‹</div>
+                <div class="header-left glass" onclick="renderHome()" style="width: 40px; height: 40px; font-size: 1rem; cursor: pointer;">‹</div>
                 <div class="header-center" style="font-size: 1rem;">Jogando</div>
                 <div class="header-right glass" style="width: 40px; height: 40px; font-size: 1rem;">⏱️</div>
             </div>
@@ -116,7 +111,7 @@ function renderGame() {
     `;
 }
 
-// ===== STARTGAME (INICIA A LÓGICA ORIGINAL) =====
+// ===== INICIAR O JOGO =====
 function startGame() {
     const shuffled = [...questionBank].sort(() => Math.random() - 0.5);
     gameState.questions = shuffled.slice(0, gameState.totalQuestions);
@@ -128,13 +123,12 @@ function startGame() {
     gameState.isActive = true;
     gameState.powerUps = { fifty: isPremium ? 5 : 3, skip: isPremium ? 3 : 2, extraTime: isPremium ? 3 : 1 };
     
-    renderGame();
-    loadQuestion();
-    startTimer();
-    updatePowerUpButtons();
+    renderGame();      // Cria a UI do jogo 1 vez
+    loadQuestion();    // Preenche a pergunta atual
+    startTimer();      // Inicia o cronômetro
 }
 
-// ===== FUNÇÕES ORIGINAIS DO SEU APP (MANTIDAS) =====
+// ===== CARREGAR PERGUNTA =====
 function loadQuestion() {
     if (gameState.currentIndex >= gameState.questions.length) { endGame(true); return; }
     const q = gameState.questions[gameState.currentIndex];
@@ -151,11 +145,13 @@ function loadQuestion() {
         btn.id = `option-${index}`;
         optionsDiv.appendChild(btn);
     });
+    
     document.getElementById('feedback').innerHTML = '';
     document.getElementById('nextButton').innerHTML = '';
     updateStats();
 }
 
+// ===== SELECIONAR RESPOSTA =====
 function selectAnswer(index) {
     if (!gameState.isActive) return;
     gameState.isActive = false;
@@ -188,9 +184,21 @@ function selectAnswer(index) {
     }
 }
 
+// ===== PRÓXIMA PERGUNTA (CORRIGIDO, NÃO RECRIA O DOM) =====
+function nextQuestion() {
+    gameState.currentIndex++;
+    gameState.isActive = true;
+    gameState.timer = 30;
+    clearInterval(window.timerInterval); // Garante que o timer antigo morra antes de recomeçar
+    loadQuestion(); // Atualiza APENAS os textos e botões, sem deletar a tela
+    startTimer();   // Reinicia o cronômetro
+}
+
+// ===== TIMER =====
 function startTimer() {
     clearInterval(window.timerInterval);
     gameState.timer = 30;
+    document.getElementById('timer').textContent = gameState.timer;
     window.timerInterval = setInterval(() => {
         gameState.timer--;
         const timerEl = document.getElementById('timer');
@@ -218,15 +226,7 @@ function timeUp() {
     }
 }
 
-function nextQuestion() {
-    gameState.currentIndex++;
-    gameState.isActive = true;
-    gameState.timer = 30;
-    renderGame();
-    loadQuestion();
-    startTimer();
-}
-
+// ===== POWER UPS =====
 function usePowerUp(type) {
     if (!gameState.isActive) return;
     if (type === 'fifty' && gameState.powerUps.fifty > 0) {
@@ -251,14 +251,17 @@ function usePowerUp(type) {
 }
 
 function updatePowerUpButtons() {
-    document.getElementById('fiftyCount').textContent = gameState.powerUps.fifty;
-    document.getElementById('skipCount').textContent = gameState.powerUps.skip;
-    document.getElementById('extraTimeCount').textContent = gameState.powerUps.extraTime;
-    document.getElementById('fiftyBtn').disabled = gameState.powerUps.fifty <= 0;
-    document.getElementById('skipBtn').disabled = gameState.powerUps.skip <= 0;
-    document.getElementById('extraTimeBtn').disabled = gameState.powerUps.extraTime <= 0;
+    if(document.getElementById('fiftyCount')) {
+        document.getElementById('fiftyCount').textContent = gameState.powerUps.fifty;
+        document.getElementById('skipCount').textContent = gameState.powerUps.skip;
+        document.getElementById('extraTimeCount').textContent = gameState.powerUps.extraTime;
+        document.getElementById('fiftyBtn').disabled = gameState.powerUps.fifty <= 0;
+        document.getElementById('skipBtn').disabled = gameState.powerUps.skip <= 0;
+        document.getElementById('extraTimeBtn').disabled = gameState.powerUps.extraTime <= 0;
+    }
 }
 
+// ===== SISTEMA DE PONTUAÇÃO =====
 function getPoints(difficulty) {
     const points = { 'fácil': 10, 'médio': 20, 'difícil': 30 };
     const multiplier = isPremium ? 2 : 1;
@@ -268,7 +271,6 @@ function getPoints(difficulty) {
 function updateStats() {
     document.getElementById('lives').textContent = '❤️'.repeat(gameState.lives) + '🖤'.repeat(3 - gameState.lives);
     document.getElementById('score').textContent = gameState.score;
-    document.getElementById('timer').textContent = gameState.timer;
 }
 
 function saveProgress() {
@@ -277,6 +279,7 @@ function saveProgress() {
     localStorage.setItem('trivia_games', userProgress.gamesPlayed);
 }
 
+// ===== FIM DE JOGO =====
 function endGame(completed) {
     clearInterval(window.timerInterval);
     gameState.isActive = false;
@@ -289,41 +292,32 @@ function endGame(completed) {
     const emoji = accuracy >= 80 ? '🏆' : accuracy >= 50 ? '👍' : '💪';
     
     document.getElementById('app').innerHTML = `
-        <div class="game-container glass" style="padding: 24px;">
-            <div class="game-over-screen" style="text-align: center;">
-                <div style="font-size: 4rem; margin: 20px 0;">${emoji}</div>
-                <h1>Fim de Jogo!</h1>
-                <div style="font-size: 4rem; font-weight: bold; color: #f5a623; margin: 20px 0;">${gameState.score}</div>
-                <div style="color: #999; font-size: 1rem; margin-bottom: 20px;">pontos</div>
-                <div class="stats-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin: 25px 0;">
-                    <div class="stat-card glass" style="padding: 15px;"><div style="font-size:0.8rem; color:#999;">Acertos</div><div style="font-size:2rem; font-weight:bold; color:#f5a623;">${gameState.correctCount}/${gameState.totalQuestions}</div></div>
-                    <div class="stat-card glass" style="padding: 15px;"><div style="font-size:0.8rem; color:#999;">Precisão</div><div style="font-size:2rem; font-weight:bold; color:#f5a623;">${accuracy}%</div></div>
-                    <div class="stat-card glass" style="padding: 15px;"><div style="font-size:0.8rem; color:#999;">Recorde</div><div style="font-size:2rem; font-weight:bold; color:#f5a623;">${userProgress.highScore}</div></div>
-                </div>
-                <div style="margin: 20px 0; color: #fff;">🪙 Moedas ganhas: <strong>${gameState.correctCount * 5}</strong> | 💰 Total: <strong>${userProgress.coins}</strong></div>
-                <button class="restart-btn" onclick="initGame()" style="padding: 15px 30px; background: linear-gradient(135deg, #f5a623, #f7c948); color: #000; border: none; border-radius: 16px; font-weight: bold; cursor: pointer;">🏠 Voltar ao Início</button>
+        <div class="glass" style="padding: 24px; max-width: 480px; width: 100%; margin: 0 auto; text-align: center;">
+            <div style="font-size: 4rem; margin: 20px 0;">${emoji}</div>
+            <h1 style="color: #fff;">Fim de Jogo!</h1>
+            <div style="font-size: 4rem; font-weight: bold; color: #f5a623; margin: 20px 0;">${gameState.score}</div>
+            <div style="color: #999; font-size: 1rem; margin-bottom: 20px;">pontos</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin: 25px 0;">
+                <div class="glass" style="padding: 15px;"><div style="font-size:0.8rem; color:#999;">Acertos</div><div style="font-size:2rem; font-weight:bold; color:#f5a623;">${gameState.correctCount}/${gameState.totalQuestions}</div></div>
+                <div class="glass" style="padding: 15px;"><div style="font-size:0.8rem; color:#999;">Precisão</div><div style="font-size:2rem; font-weight:bold; color:#f5a623;">${accuracy}%</div></div>
+                <div class="glass" style="padding: 15px;"><div style="font-size:0.8rem; color:#999;">Recorde</div><div style="font-size:2rem; font-weight:bold; color:#f5a623;">${userProgress.highScore}</div></div>
             </div>
+            <div style="margin: 20px 0; color: #fff;">🪙 Moedas ganhas: <strong>${gameState.correctCount * 5}</strong></div>
+            <button onclick="renderHome()" style="padding: 15px 30px; background: linear-gradient(135deg, #f5a623, #f7c948); color: #000; border: none; border-radius: 16px; font-weight: bold; cursor: pointer;">🏠 Voltar ao Início</button>
         </div>
     `;
 }
 
 function shareScore() {
-    const text = `🎯 Fiz ${gameState.score} pontos no Jogo de Trivia! Consegue me superar?`;
+    const text = `🎯 Fiz ${gameState.score} pontos! Consegue me superar?`;
     if (navigator.share) {
         navigator.share({ title: 'Jogo de Trivia', text: text, url: window.location.href }).catch(() => {});
     } else {
         navigator.clipboard.writeText(text + ' ' + window.location.href)
-            .then(() => alert('📋 Link copiado! Compartilhe com seus amigos!'))
+            .then(() => alert('📋 Link copiado!'))
             .catch(() => {});
     }
 }
 
-function showPremiumOffer() {
-    const offer = confirm(
-        `👑 Jogo de Trivia Premium\n\nBenefícios:\n✅ 2x mais pontos\n✅ 2x mais moedas\n✅ Power-ups extras\n✅ Sem anúncios\nPreço: R$ ${PREMIUM_PRICE.toFixed(2)}/mês\n\nDeseja assinar agora?`
-    );
-    if (offer) alert('🔗 Redirecionando para página de pagamento...\n\n(Configure sua integração de pagamento aqui)');
-}
-
-// INICIALIZA
-initGame();
+// ===== INICIALIZA =====
+renderHome();
